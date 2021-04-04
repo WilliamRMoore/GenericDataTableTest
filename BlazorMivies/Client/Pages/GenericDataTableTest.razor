@@ -1,0 +1,95 @@
+﻿@using BlazorMivies.Shared
+@using System;
+@using System.ComponentModel;
+@using System.Reflection;
+
+@inject IJSRuntime js
+@inject HttpClient Http
+
+@page "/test"
+
+<GenericDataTable3 GenericType="WeatherForecast" Items="@forecasts" getItemsOrdered="getItems" @bind-OrderColumn="OrderColumn" 
+                   @bind-SearchString="SearchString" Search="Search" >
+    <ActionFragment>
+        @*<button @onclick="@(() =>HandleClick(context))">@context.Date</button>*@
+        @if (context.TemperatureC > 0)
+        {
+            <renderFragment>
+                <button class="btn btn-danger" @onclick="(() => HandleClick(context) )">Delete</button>
+            </renderFragment>
+            @*<TableAction GenericType="WeatherForecast" item="context" SelectedItem="HandleClick">
+                <renderFragment>
+                    <p>Delete</p>
+                </renderFragment>
+            </TableAction>*@
+        }
+    </ActionFragment>
+</GenericDataTable3>
+<button @onclick="(() => Change())" >@buttonText</button>
+
+
+@code {
+
+    //private bool desc = true;
+    private WeatherForecast[] forecasts { get; set; }
+    //private IEnumerable<WeatherForecast> testForecasts { get; set; }
+    private string OrderColumn { get; set; }
+    private bool Render = true;
+    private string SearchString { get; set; }
+    private string buttonText { get; set; } = "change";
+
+    private Type T = typeof(WeatherForecast);
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+        //testForecasts = forecasts.ToList();
+    }
+
+
+    private void Search()
+    {
+        SearchString = SearchString.ToLower();
+        forecasts = forecasts.Where(f => f.TemperatureF.ToString().ToLower().Contains(SearchString) || f.TemperatureC.ToString().ToLower().Contains(SearchString)
+        || f.Summary.ToLower().Contains(SearchString) || f.Date.ToString().ToLower().Contains(SearchString) ).ToArray();
+    }
+
+    private void getItems(IEnumerable<WeatherForecast> fs)
+    {
+        forecasts = fs.ToArray();
+    }
+
+    private async Task HandleClick(WeatherForecast forcast)
+    {
+        forecasts = forecasts.Where(f => !(f.Equals(forcast))).ToArray();
+        //Render = false;
+       //await js.InvokeVoidAsync("alert", $"{forcast.TemperatureF}");
+        //Render = false;
+    }
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Console.WriteLine("Rendered");
+        base.OnAfterRender(firstRender);
+    }
+
+    private async Task Change()
+    {
+        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+    }
+
+    protected override bool ShouldRender()
+    {
+        if (Render == false)
+        {
+            Render = true;
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+}

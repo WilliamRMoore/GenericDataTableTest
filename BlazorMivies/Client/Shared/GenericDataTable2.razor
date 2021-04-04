@@ -1,0 +1,105 @@
+﻿@using System;
+@using System.ComponentModel;
+@using System.Reflection;
+
+@typeparam GenericType
+
+@if (Items == null)
+{
+    <img src="https://media4.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif" />
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+
+                @foreach (var prop in Props)
+                {
+                    //Find the displayname, if it exists.
+                    var name = PDesctirptions.Find(prop.Name, true)?.DisplayName ?? prop.Name;
+
+                    <td @onclick="@(() => OrderBy(prop.Name))">@name</td>
+                }
+
+                @* if we have actions, show them. *@
+                @if (ActionFragment != null)
+                {
+                    <td>Actions</td>
+                }
+
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var item in Items)
+            {
+                <tr>
+
+                    @foreach (var p in Props)
+                    {
+                        //Get's the property value of the item to display in the table.
+                        <td>@item.GetType().GetProperty(p.Name).GetValue(item).ToString()</td>
+                    }
+
+                    @if (ActionFragment != null)
+                    {
+                        <td>@ActionFragment(item)</td>
+                    }
+
+                </tr>
+            }
+
+        </tbody>
+    </table>
+
+}
+
+@code {
+
+    private bool desc = false;
+    private bool firstRender = true;
+    [Parameter] public IEnumerable<GenericType> Items { get; set; }
+    [Parameter] public RenderFragment<GenericType> ActionFragment { get; set; }
+    [Parameter] public EventCallback<PropertyDescriptor> OrderColumnPropertyDecsriptor { get; set; }
+    private Type T = typeof(GenericType);
+    private PropertyInfo[] Props { get; set; }
+    private PropertyDescriptorCollection PDesctirptions { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine(desc);
+        Props = T.GetProperties();
+        PDesctirptions = TypeDescriptor.GetProperties(T);
+
+    }
+
+    public async Task OrderColumnPropertyDecsriptorChanged(string name)
+    {
+        PropertyDescriptor propertyDescriptor = TypeDescriptor.GetProperties(T).Find(name, true);
+
+        await OrderColumnPropertyDecsriptor.InvokeAsync(propertyDescriptor);
+    }
+
+    void OrderBy(string name)
+    {
+        PropertyDescriptor pDescriptor = TypeDescriptor.GetProperties(T).Find(name, true);
+
+        if (desc)
+        {
+            Items = Items.OrderBy(d => pDescriptor.GetValue(d)).ToList();
+            desc = false;
+        }
+        else
+        {
+            Items = Items.OrderByDescending(d => pDescriptor.GetValue(d)).ToList();
+            desc = true;
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+
+    }
+}

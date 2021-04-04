@@ -1,0 +1,81 @@
+﻿@page "/fetchdata"
+@using BlazorMivies.Shared
+@using System;
+@using System.ComponentModel;
+@using System.Reflection;
+
+@inject HttpClient Http
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                @foreach(var prop in props)
+                {
+                    <td @onclick="@(() => OrderBy(prop.Name))">@prop.Name</td>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private bool descending = false;
+    private WeatherForecast[] forecasts;
+    Type t = typeof(WeatherForecast);
+    PropertyInfo[] props { get; set; }
+    MemberInfo[] members = typeof(WeatherForecast).GetProperties();
+    List<String> names = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+        props = t.GetProperties();
+
+        foreach(var prop in props)
+        {
+            var name = /*field.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? */prop.Name;
+            names.Add(name);
+        }
+
+    }
+
+    void OrderBy(string name)
+    {
+        PropertyDescriptor prop = TypeDescriptor.GetProperties(t).Find(name, true);
+
+        if (descending)
+        {
+            forecasts = forecasts.OrderBy(f => prop.GetValue(f)).ToArray();
+            descending = false;
+        }
+        else
+        {
+            forecasts = forecasts.OrderByDescending(f => prop.GetValue(f)).ToArray();
+            descending = true;
+        }
+
+    }
+
+}

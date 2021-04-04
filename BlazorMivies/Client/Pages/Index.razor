@@ -1,0 +1,38 @@
+﻿@page "/"
+@inject IRepository repository
+
+<div>
+
+    <h3>Movie</h3>
+
+    <MoviesList Movies="Movies" />
+
+    <CustomTypeahead SearchMethod="SearchMethod">
+        <ResultTemplate>
+            @context
+        </ResultTemplate>
+    </CustomTypeahead>
+
+    @*<GenericDataTable Data="Movies" Type="typeof(Movie)"/>*@
+</div>
+
+
+@code{
+    private List<Movie> Movies;
+
+    protected async override Task OnInitializedAsync()
+    {
+        //await Task.Delay(2000);
+        Movies = repository.getMovies();
+
+    }
+
+    private async Task<IEnumerable<string>> SearchMethod(string searchText)
+    {
+        await Task.Delay(2000);
+        if(searchText == "test") { return Enumerable.Empty<string>(); }
+
+        return new List<string>() { "William", "Moore2" };
+    }
+
+}

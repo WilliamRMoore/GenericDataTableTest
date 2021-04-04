@@ -1,0 +1,38 @@
+﻿<div>
+    <label>@Label</label>
+    <div>
+        <InputFile accept=".pdf" OnChange="OnChange" />
+    </div>
+</div>
+
+<div>
+    @if (base64 != null)
+    {
+    <div>
+        <div style="width:auto">
+            <iframe src="data:application/pdf;base64;, @base64" style="width:50%; height:1000px" />
+            <iframe src="data:application/pdf;base64;, @base64" style="width: 50%; height: 1000px; float:right" />
+        </div>
+    </div>
+
+    }
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "Image";
+    [Parameter] public EventCallback<string> OnSelectedFile { get; set; }
+    private string base64;
+    async Task OnChange(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles();
+
+        foreach (var file in files)
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(100000000).ReadAsync(buffer);
+            base64 = Convert.ToBase64String(buffer);
+            await OnSelectedFile.InvokeAsync(base64);
+            StateHasChanged();
+        }
+    }
+}

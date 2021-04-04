@@ -1,0 +1,7 @@
+﻿
+<input type="text" @attributes="AdditionalParamaters" />
+
+@code {
+    [Parameter(CaptureUnmatchedValues = true)] 
+    public IDictionary<string, object> AdditionalParamaters { get; set; }
+}

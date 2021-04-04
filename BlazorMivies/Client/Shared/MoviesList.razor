@@ -1,0 +1,34 @@
+﻿@inject IJSRuntime js
+
+<div class="movies-container">
+    <GnericList List="Movies">
+        <ElementTemplate>
+            <IndividualMovie Movie="context" DeleteMovie="DeleteMovie" />
+        </ElementTemplate>
+    </GnericList>
+</div>
+
+
+@code {
+
+
+    [Parameter] public List<Movie> Movies { get; set; }
+
+
+    private async Task DeleteMovie(Movie movie)
+    {
+        await js.MyFunction("custom message");
+        var confirm = await js.Confirm($"Are you sure you want to delete {movie.Title}?");
+
+        if (confirm)
+        {
+            Movies.Remove(movie);
+        }
+    }
+
+    protected override bool ShouldRender()
+    {
+        return true;
+    }
+
+}

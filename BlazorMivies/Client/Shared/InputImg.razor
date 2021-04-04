@@ -1,0 +1,68 @@
+﻿<div>
+    <label>@Label</label>
+    <div class="disabled">
+        <InputFile  accept=".jpg,.jpeg,.png" OnChange="OnChange"  />
+    </div>
+</div>
+
+<div>
+    @if (imageBase64 != null)
+    {
+        <div>
+            <div style="margin:10px">
+                <img src="data:image/jpeg;base64;, @imageBase64" style="width: 400px" />
+            </div>
+        </div>
+    }
+    @if (ImageURL != null)
+    {
+        <div>
+            <div style="margin:10px">
+                <img src="@ImageURL" style="width: 400px" />
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "Image";
+    [Parameter] public EventCallback<string> OnSelectedImage { get; set; }
+    [Parameter] public bool DisableButtonChanged { get; set; }
+    [Parameter] public string ImageURL { get; set; }
+    private string imageBase64;
+
+    async Task OnChange(InputFileChangeEventArgs e)
+    {
+        var imageFiles = e.GetMultipleFiles();
+
+        foreach(var imageFile in imageFiles)
+        {
+            DisableButtonChanged = true;
+            await Task.Yield();
+            var buffer = new byte[imageFile.Size];
+            var a = imageFile.OpenReadStream(10000000).ReadAsync(buffer);
+
+            //var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            int i = 0;
+
+            while (!a.IsCompleted)
+            {
+                i++;
+
+                if (i % 100 == 0)
+                {
+                    await Task.Delay(1000);
+                    StateHasChanged();
+                }
+            }
+
+            await a;
+            DisableButtonChanged = false;
+            imageBase64 = Convert.ToBase64String(buffer);
+            await OnSelectedImage.InvokeAsync(imageBase64);
+            ImageURL = null;
+            StateHasChanged();
+        }
+    }
+
+}

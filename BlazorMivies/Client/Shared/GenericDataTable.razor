@@ -1,0 +1,69 @@
+﻿@using System;
+@using System.ComponentModel;
+@using System.Reflection;
+
+@if (Data == null)
+{
+    <img src="https://media4.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif" />
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                @foreach (var prop in props)
+                {
+                    <td @onclick="@(() => OrderBy(prop.Name))">@prop.Name</td>
+                }
+            </tr>
+        </thead>
+        <tbody>
+
+         @foreach (var i in Data)
+          {
+            <tr>
+                @foreach(var p in props)
+                {
+                    <td>@i.GetType().GetProperty(p.Name).GetValue(i).ToString()</td>
+                }
+            </tr>
+          }
+
+        </tbody>
+    </table>
+
+}
+@typeparam TItem
+@code {
+
+    private bool desc = false;
+    [Parameter] public IEnumerable<TItem> Data { get; set; }
+    [Parameter] public Type Type { get; set; }
+    PropertyInfo[] props { get; set; }
+    List<string> values = new List<string>();
+
+
+    protected override void OnInitialized()
+    {
+        props = Type.GetProperties();
+    }
+
+    void OrderBy(string name)
+    {
+        PropertyDescriptor prop = TypeDescriptor.GetProperties(Type).Find(name, true);
+
+        Console.WriteLine("Clicked!");
+
+        if (desc)
+        {
+            Data = Data.OrderBy(d => prop.GetValue(d)).ToList();
+            desc = false;
+        }
+        else
+        {
+            Data = Data.OrderByDescending(d => prop.GetValue(d)).ToList();
+            desc = true;
+        }
+    }
+}
+

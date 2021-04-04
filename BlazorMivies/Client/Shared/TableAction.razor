@@ -1,0 +1,11 @@
+﻿
+<button @onclick="@(() => SelectedItem.InvokeAsync(item))">@renderFragment</button>
+
+@typeparam GenericType
+
+@code {
+    [Parameter] public EventCallback<GenericType> SelectedItem { get; set; }
+    [Parameter] public RenderFragment renderFragment { get; set; }
+    [Parameter] public GenericType item { get; set; }
+
+    }
